@@ -312,63 +312,77 @@ flowchart LR
 
 ## 4.5 Modelo de Dominio Conceptual
 
+> [!NOTE]
+> **Fundamentación Metodológica de Craig Larman (*Applying UML and Patterns*):**  
+> El Modelo de Dominio es el artefacto central del análisis orientado a objetos y representa las clases conceptuales y situaciones del mundo real del negocio. Al no constituir un modelo de diseño de software ni un esquema relacional de base de datos, **las clases conceptuales no deben contener tipos de datos de lenguajes de programación** (como `UUID`, `String`, `int` o `DateTime`), indicadores de visibilidad (`+`, `-`) ni atributos que simulen claves foráneas de bases de datos. Las conexiones entre conceptos se expresan puramente mediante asociaciones semánticas y multiplicidades.
+
 ```mermaid
 classDiagram
+    direction TB
+
     class Comercio {
-        +UUID id
-        +String razonSocial
-        +String nit
-        +String cuentaBancariaIban
+        razonSocial
+        nombreComercial
+        nit
+        cuentaBancaria
     }
     class TransmisionLive {
-        +UUID id
-        +String tiktokUsername
-        +DateTime fechaHoraInicio
-        +String estado
+        tiktokUsername
+        titulo
+        fechaHoraInicio
+        estado
     }
     class ProductoCatalogo {
-        +UUID id
-        +String skuBase
-        +String nombre
-        +Decimal precioBase
+        skuBase
+        nombre
+        descripcion
+        precioBase
     }
     class VarianteProducto {
-        +UUID id
-        +String skuEspecifico
-        +String color
-        +String talla
-        +Int stockFisico
-        +Int stockDisponible
+        skuEspecifico
+        color
+        talla
+        stockFisico
+        stockDisponible
+        precio
     }
     class BloqueoStockTemporal {
-        +String redisKey
-        +UUID varianteId
-        +String usuarioTiktok
-        +DateTime fechaExpiracion
-        +String estadoLock
+        identificadorBloqueo
+        usuarioTiktok
+        tiempoExpiracion
+        estadoBloqueo
     }
     class OrdenCompra {
-        +UUID id
-        +Decimal montoTotal
-        +DateTime fechaCreacion
-        +String estado
-        +String checkoutUrl
+        numeroOrden
+        montoTotal
+        fechaHoraCreacion
+        estado
+        enlaceCheckout
     }
     class TransaccionQRSimple {
-        +UUID id
-        +String payloadEMVCo
-        +String transactionIdGateway
-        +DateTime fechaExpiracion
-        +String estadoCobro
+        codigoQR
+        identificadorTransaccion
+        monto
+        tiempoVencimiento
+        estadoPago
     }
 
     Comercio "1" -- "*" TransmisionLive : ejecuta
-    Comercio "1" -- "*" ProductoCatalogo : es_propietario
-    ProductoCatalogo "1" -- "*" VarianteProducto : contiene
-    VarianteProducto "1" -- "*" BloqueoStockTemporal : es_apartado_en
+    Comercio "1" -- "*" ProductoCatalogo : administra
+    ProductoCatalogo "1" -- "1..*" VarianteProducto : clasificado_en
+    VarianteProducto "1" -- "*" BloqueoStockTemporal : reservado_en
     BloqueoStockTemporal "1" -- "1" OrdenCompra : formaliza
-    OrdenCompra "1" -- "1" TransaccionQRSimple : genera
+    OrdenCompra "1" -- "1" TransaccionQRSimple : liquidada_con
 ```
+
+### Diccionario de Clases Conceptuales del Dominio
+* **Comercio:** Representa la entidad o negocio minorista que comercializa sus productos mediante transmisiones en vivo y recibe la recaudación bancaria.
+* **TransmisionLive:** Sesión activa de streaming en TikTok Live donde se exhiben los artículos y se generan interacciones de compra.
+* **ProductoCatalogo:** Definición conceptual del artículo matriz ofertado al público general.
+* **VarianteProducto:** Unidad física y concreta de mercadería diferenciada por atributos de talla, color y disponibilidad en stock.
+* **BloqueoStockTemporal:** Reserva preventiva y efímera de una unidad de producto en favor del comprador más veloz para evitar sobreventas.
+* **OrdenCompra:** Formalización transaccional del pedido pactado, con estado de liquidación y monto total a pagar.
+* **TransaccionQRSimple:** Instrumento de cobro digital interoperable emitido con monto exacto y vigencia delimitada para su escaneo bancario.
 
 ---
 
